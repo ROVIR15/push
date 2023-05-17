@@ -9,7 +9,7 @@ import (
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"s
+	"github.com/joho/godotenv"
 )
 
 var DB *sql.DB
