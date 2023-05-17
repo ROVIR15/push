@@ -4,9 +4,7 @@ import (
 	"log"
 	"time"
 
-	DB "github.com/ROVIR15/push-notification-service/database"
 	MQTT "github.com/ROVIR15/push-notification-service/mqtt"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -18,8 +16,6 @@ func loadEnv() {
 }
 
 func main() {
-
-	DB.InitDB()
 
 	token := MQTT.InitMQTT()
 
