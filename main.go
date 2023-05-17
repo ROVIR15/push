@@ -1,18 +1,14 @@
 package main
 
 import (
-	"database/sql"
 	"log"
-	"os"
-	"os/signal"
 	"time"
 
-	MQTT "github.com/eclipse/paho.mqtt.golang"
+	DB "github.com/ROVIR15/push-notification-service/database"
+	MQTT "github.com/ROVIR15/push-notification-service/mqtt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
-
-var DB *sql.DB
 
 func loadEnv() {
 	err := godotenv.Load()
@@ -21,63 +17,11 @@ func loadEnv() {
 	}
 }
 
-func InitDB() {
-
-	loadEnv()
-
-	connStr := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(" + os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT") + ")/" + os.Getenv("DB_NAME")
-	db, err := sql.Open("mysql", connStr)
-	if err != nil {
-		log.Fatal("Error connecting to the database:", err)
-	}
-	DB = db
-}
-
-var MiQ *MQTT.Client
-
-func InitMQTT() MQTT.Client {
-	// Create an MQTT client options
-	opts := MQTT.NewClientOptions()
-
-	hostMqtt := os.Getenv("MQTT_HOST")
-	portMqtt := os.Getenv("MQTT_PORT")
-
-	connStr := "ws://" + hostMqtt + ":" + portMqtt + "/mqtt"
-
-	opts.AddBroker(connStr) // Replace with your broker's address
-
-	// Set client ID
-	opts.SetClientID("mqttx_24d9a248")
-
-	// Set optional username and password
-	opts.SetUsername("newsecurity")
-	opts.SetPassword("Testing1234")
-
-	// Create a new MQTT client
-	client := MQTT.NewClient(opts)
-
-	// Set up signal handler to gracefully close the client
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c
-		client.Disconnect(250)
-		os.Exit(0)
-	}()
-
-	// Connect to the MQTT broker
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatal(token.Error())
-	}
-
-	return client
-}
-
 func main() {
 
-	InitDB()
+	DB.InitDB()
 
-	token := InitMQTT()
+	token := MQTT.InitMQTT()
 
 	topics := []string{
 		"submitted",
@@ -85,7 +29,7 @@ func main() {
 		"approval",
 	}
 
-	tokens := subscribeToTopics(token, topics)
+	tokens := MQTT.SubscribeToTopics(token, topics)
 	for _, token := range tokens {
 		if token.Error() != nil {
 			log.Fatal(token.Error())
